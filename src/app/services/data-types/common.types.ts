@@ -16,3 +16,10 @@ export interface SongList {
   picUrl: string;
   name: string;
 }
+
+export interface Singer {
+  id: number;
+  albumSize: number;
+  name: string;
+  img1v1Url: string;
+}
