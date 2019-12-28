@@ -1,4 +1,5 @@
 <div class="home">
+  <!-- 轮播图 -->
   <app-wy-carousel #wyCarousel [activeIndex]="carouselActiveIndex" (changeSlide)="onChangeSlide($event)">
     <nz-carousel nzAutoPlay="true" nzEffect="fade" [nzDotRender]="wyCarousel.dotRef"
       (nzBeforeChange)="onNzBeforeChange($event)">
@@ -9,5 +10,30 @@
       </div>
     </nz-carousel>
   </app-wy-carousel>
-
+  <!-- 推荐歌单 -->
+  <div class="main">
+    <div class="wrap">
+      <div class="left">
+        <div class="sec">
+          <div class="up">
+            <div class="navs">
+              <h2><i></i><a>热门推荐</a></h2>
+              <nav>
+                <a *ngFor="let hotTag of hotTags">{{hotTag.name}}</a>
+              </nav>
+            </div>
+            <a>更多
+              <i nz-icon nzType="arrow-right" nzTheme="outline"></i>
+            </a>
+          </div>
+          <div class="down">
+            <div class="down-wrap">
+              <app-single-sheet class="sheet-item" *ngFor="let item of songList" [sheet]="item"></app-single-sheet>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="right">right</div>
+    </div>
+  </div>
 </div>

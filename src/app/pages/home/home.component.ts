@@ -22,7 +22,9 @@ export class HomeComponent implements OnInit {
   private nzCarousel: NzCarouselComponent;
 
   constructor(private homeService: HomeService) {
+    this.getBanners();
     this.getHotTags();
+    this.getPersonalSongList();
   }
 
   ngOnInit() {}
