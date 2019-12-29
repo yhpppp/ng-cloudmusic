@@ -6,10 +6,9 @@ import {
   Singer
 } from '../../services/data-types/common.types';
 import { NzCarouselComponent } from 'ng-zorro-antd';
-import { HomeService } from '../../services/home.service';
-import { SingerService } from '../../services/singer.service';
 import { ActivatedRoute } from '@angular/router';
 import { map } from 'rxjs/internal/operators';
+import { SongListService } from '../../services/song-list.service';
 
 @Component({
   selector: 'app-home',
@@ -26,7 +25,10 @@ export class HomeComponent implements OnInit {
   @ViewChild(NzCarouselComponent, { static: true })
   private nzCarousel: NzCarouselComponent;
 
-  constructor(private route: ActivatedRoute) {
+  constructor(
+    private route: ActivatedRoute,
+    private songListService: SongListService
+  ) {
     this.route.data
       .pipe(map(res => res.homeDatas))
       .subscribe(([banners, hotTags, songList, singer]) => {
@@ -45,5 +47,13 @@ export class HomeComponent implements OnInit {
 
   onChangeSlide(type: 'pre' | 'next') {
     this.nzCarousel[type]();
+  }
+  // 1
+  onPlayList(id: number) {
+    console.log('on :) ');
+
+    this.songListService.playSongList(id).subscribe(res => {
+      console.log('res :) ', res);
+    });
   }
 }

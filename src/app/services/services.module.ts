@@ -1,7 +1,6 @@
 import { NgModule, InjectionToken } from '@angular/core';
 
 export const API_CONF = new InjectionToken('ApiConfigToken');
-export const API_CONFIG = new InjectionToken('ApiConfigToken');
 @NgModule({
   declarations: [],
   imports: [],

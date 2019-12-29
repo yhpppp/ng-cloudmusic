@@ -28,7 +28,8 @@
           </div>
           <div class="down">
             <div class="down-wrap">
-              <app-single-sheet class="sheet-item" *ngFor="let item of songList" [sheet]="item"></app-single-sheet>
+              <app-single-sheet class="sheet-item" *ngFor="let item of songList" [sheet]="item"
+                (eventPlay)="onPlayList($event)"></app-single-sheet>
             </div>
           </div>
         </div>
