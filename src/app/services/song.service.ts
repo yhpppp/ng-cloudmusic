@@ -27,11 +27,15 @@ export class SongService {
     const songArr = Array.isArray(songs) ? songs.slice() : [songs];
     const ids = songArr.map(item => item.id).join(',');
     // 5
-    return Observable.create(observer => {
-      this.getSongUrl(ids).subscribe(urls => {
-        observer.next(this.generateSongList(songArr, urls));
-      });
-    });
+    // return Observable.create(observer => {
+    //   this.getSongUrl(ids).subscribe(urls => {
+    //     observer.next(this.generateSongList(songArr, urls));
+    //   });
+    // });
+
+    return this.getSongUrl(ids).pipe(
+      map(urls => this.generateSongList(songArr, urls))
+    );
   }
 
   // 歌曲信息与歌单 数据拼接
