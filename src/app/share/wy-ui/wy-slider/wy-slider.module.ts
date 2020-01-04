@@ -1,8 +1,8 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WySliderComponent } from './wy-slider.component';
-import { WySliderTrackComponent } from './components/wx-slider-track.component';
-import { WySliderHandleComponent } from './components/wx-slider-handle.component';
+import { WySliderHandleComponent } from './components/wy-slider-handle.component';
+import { WySliderTrackComponent } from './components/wy-slider-track.component';
 
 @NgModule({
   declarations: [
