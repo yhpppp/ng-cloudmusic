@@ -51,6 +51,15 @@ export class WySliderComponent implements OnInit {
 
   constructor(@Inject(DOCUMENT) private doc: Document) {}
 
+  ngOnInit() {
+    this.sliderDom = this.wySlider.nativeElement;
+    this.createDraggingObservables();
+    this.subscribeDrag(['start']);
+  }
+
+  /**
+   * 创建拖动相关时间线
+   */
   private createDraggingObservables() {
     const orientField = this.wyVertical ? 'pageY' : 'pageX';
     const mouse: SliderEventObserverConfig = {
@@ -95,7 +104,22 @@ export class WySliderComponent implements OnInit {
     this.dragEnd$ = merge(mouse.end$, touch.end$);
   }
 
-  ngOnInit() {
-    this.sliderDom = this.wySlider.nativeElement;
+  private subscribeDrag(events: string[] = ['start', 'move', 'end']) {
+    if (events.indexOf('start') !== -1 && this.dragStart$) {
+      this.dragStart$.subscribe(this.onDragStart.bind(this));
+    }
+    if (events.indexOf('move') !== -1 && this.dragMove$) {
+      this.dragMove$.subscribe(this.onDragMove.bind(this));
+    }
+
+    if (events.indexOf('end') !== -1 && this.dragEnd$) {
+      this.dragEnd$.subscribe(this.onDragEnd.bind(this));
+    }
   }
+
+  private onDragStart(value: number) {}
+
+  private onDragMove(value: number) {}
+
+  private onDragEnd() {}
 }
