@@ -17,6 +17,9 @@ import {
   distinctUntilChanged
 } from 'rxjs/internal/operators';
 import { DOCUMENT } from '@angular/common';
+import { getElementOffset } from 'ng-zorro-antd';
+import { limitNumberInRange } from '../../../utils/number';
+import { isExistInArray } from '../../../utils/array';
 
 interface SliderEventObserverConfig {
   start: string;
@@ -42,6 +45,9 @@ function sliderEvent(e: Event) {
 export class WySliderComponent implements OnInit {
   [x: string]: any;
   @Input() wyVertical = false;
+  @Input() wyMin = 0;
+  @Input() wyMax = 100;
+
   @ViewChild('wySlider', { static: true }) private wySlider: ElementRef;
   private sliderDom: HTMLDivElement;
 
@@ -105,21 +111,52 @@ export class WySliderComponent implements OnInit {
   }
 
   private subscribeDrag(events: string[] = ['start', 'move', 'end']) {
-    if (events.indexOf('start') !== -1 && this.dragStart$) {
+    if (isExistInArray(events, 'start') && this.dragStart$) {
       this.dragStart$.subscribe(this.onDragStart.bind(this));
     }
-    if (events.indexOf('move') !== -1 && this.dragMove$) {
+    if (isExistInArray(events, 'move') && this.dragMove$) {
       this.dragMove$.subscribe(this.onDragMove.bind(this));
     }
 
-    if (events.indexOf('end') !== -1 && this.dragEnd$) {
+    if (isExistInArray(events, 'end') && this.dragEnd$) {
       this.dragEnd$.subscribe(this.onDragEnd.bind(this));
     }
   }
 
-  private onDragStart(value: number) {}
+  private onDragStart(value: number) {
+    console.log('value :) ', value);
+  }
 
   private onDragMove(value: number) {}
 
   private onDragEnd() {}
+
+  // position / 滑块组件长度 === (val - min) / (max - min)
+  private findClosestValue(position: number): number {
+    // 获取滑块总长
+    const sliderLength = this.getSliderLength();
+
+    // 滑块 左||上 端点位置
+    const sliderStart = this.getSliderStartPosition();
+    // 滑块当前位置 / 滑块总长
+    const ratio = limitNumberInRange(
+      (position - sliderStart) / sliderLength,
+      0,
+      1
+    );
+    // 垂直方向修正
+    const ratioPlus = this.wyVertical ? 1 - ratio : ratio;
+    return ratioPlus * (this.wyMax - this.wyMin) + this.wyMin;
+  }
+
+  private getSliderLength(): number {
+    return this.wyVertical
+      ? this.sliderDom.clientHeight
+      : this.sliderDom.clientWidth;
+  }
+
+  private getSliderStartPosition(): number {
+    const offset = getElementOffset(this.sliderDom);
+    return this.wyVertical ? offset.top : offset.left;
+  }
 }
