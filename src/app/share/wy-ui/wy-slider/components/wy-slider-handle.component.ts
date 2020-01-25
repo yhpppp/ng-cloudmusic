@@ -10,14 +10,15 @@ import {
 interface Style {
   left?: string | null;
   bottom?: string | null;
+  width?: string | null;
+  height?: string | null;
 }
 
 @Component({
   selector: 'app-wy-slider-handle',
   template: `
-    <div class="wy-slider-handle"></div>
+    <div class="wy-slider-handle" [ngStyle]="style"></div>
   `,
-  styles: [],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class WySliderHandleComponent implements OnInit, OnChanges {

@@ -5,9 +5,12 @@ import {
   Input,
   ViewChild,
   ElementRef,
-  Inject
+  Inject,
+  ChangeDetectorRef,
+  OnDestroy,
+  ChangeDetectionStrategy
 } from '@angular/core';
-import { Observable, fromEvent, merge } from 'rxjs';
+import { Observable, fromEvent, merge, Subscription } from 'rxjs';
 import {
   pluck,
   map,
@@ -18,8 +21,8 @@ import {
 } from 'rxjs/internal/operators';
 import { DOCUMENT } from '@angular/common';
 import { getElementOffset } from 'ng-zorro-antd';
-import { limitNumberInRange } from '../../../utils/number';
-import { isExistInArray } from '../../../utils/array';
+import { limitNumberInRange, getPercent } from '../../../utils/number';
+import { inArray } from '../../../utils/array';
 
 interface SliderEventObserverConfig {
   start: string;
@@ -31,6 +34,12 @@ interface SliderEventObserverConfig {
   moveResolved$?: Observable<number>;
   end$?: Observable<Event>;
 }
+
+// interface SliderValue {
+//   value: number | null;
+// }
+type SliderValue = number | null;
+
 function sliderEvent(e: Event) {
   e.stopPropagation();
   e.preventDefault();
@@ -40,22 +49,33 @@ function sliderEvent(e: Event) {
   selector: 'app-wy-slider',
   templateUrl: './wy-slider.component.html',
   styleUrls: ['./wy-slider.component.less'],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class WySliderComponent implements OnInit {
-  [x: string]: any;
+export class WySliderComponent implements OnInit, OnDestroy {
   @Input() wyVertical = false;
   @Input() wyMin = 0;
   @Input() wyMax = 100;
 
-  @ViewChild('wySlider', { static: true }) private wySlider: ElementRef;
   private sliderDom: HTMLDivElement;
+  @ViewChild('wySlider', { static: true }) private wySlider: ElementRef;
 
   private dragStart$: Observable<number>;
   private dragMove$: Observable<number>;
   private dragEnd$: Observable<Event>;
+  private dragStart: Subscription | null;
+  private dragMove: Subscription | null;
+  private dragEnd: Subscription | null;
 
-  constructor(@Inject(DOCUMENT) private doc: Document) {}
+  private isDragging = false;
+
+  value: SliderValue = null;
+  offset: SliderValue = null;
+
+  constructor(
+    @Inject(DOCUMENT) private doc: Document,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit() {
     this.sliderDom = this.wySlider.nativeElement;
@@ -63,9 +83,6 @@ export class WySliderComponent implements OnInit {
     this.subscribeDrag(['start']);
   }
 
-  /**
-   * 创建拖动相关时间线
-   */
   private createDraggingObservables() {
     const orientField = this.wyVertical ? 'pageY' : 'pageX';
     const mouse: SliderEventObserverConfig = {
@@ -85,18 +102,18 @@ export class WySliderComponent implements OnInit {
     };
 
     [mouse, touch].forEach(source => {
-      const { start, move, end, filter: filterFn, pluckKey } = source;
+      const { start, move, end, filter: filerFunc, pluckKey } = source;
+
       source.startPlucked$ = fromEvent(this.sliderDom, start).pipe(
-        filter(filterFn),
+        filter(filerFunc),
         tap(sliderEvent),
         pluck(...pluckKey),
         map((position: number) => this.findClosestValue(position))
       );
 
       source.end$ = fromEvent(this.doc, end);
-
       source.moveResolved$ = fromEvent(this.doc, move).pipe(
-        filter(filterFn),
+        filter(filerFunc),
         tap(sliderEvent),
         pluck(...pluckKey),
         distinctUntilChanged(),
@@ -111,42 +128,94 @@ export class WySliderComponent implements OnInit {
   }
 
   private subscribeDrag(events: string[] = ['start', 'move', 'end']) {
-    if (isExistInArray(events, 'start') && this.dragStart$) {
-      this.dragStart$.subscribe(this.onDragStart.bind(this));
+    if (inArray(events, 'start') && this.dragStart$ && !this.dragStart) {
+      this.dragStart = this.dragStart$.subscribe(this.onDragStart.bind(this));
     }
-    if (isExistInArray(events, 'move') && this.dragMove$) {
-      this.dragMove$.subscribe(this.onDragMove.bind(this));
+    if (inArray(events, 'move') && this.dragMove$ && !this.dragMove) {
+      this.dragMove = this.dragMove$.subscribe(this.onDragMove.bind(this));
     }
+    if (inArray(events, 'end') && this.dragEnd$ && !this.dragEnd) {
+      this.dragEnd = this.dragEnd$.subscribe(this.onDragEnd.bind(this));
+    }
+  }
 
-    if (isExistInArray(events, 'end') && this.dragEnd$) {
-      this.dragEnd$.subscribe(this.onDragEnd.bind(this));
+  private unsubscribeDrag(events: string[] = ['start', 'move', 'end']) {
+    if (inArray(events, 'start') && this.dragStart) {
+      this.dragStart.unsubscribe();
+      this.dragStart = null;
+    }
+    if (inArray(events, 'move') && this.dragMove) {
+      this.dragMove.unsubscribe();
+      this.dragMove = null;
+    }
+    if (inArray(events, 'end') && this.dragEnd) {
+      this.dragEnd.unsubscribe();
+      this.dragEnd = null;
     }
   }
 
   private onDragStart(value: number) {
-    console.log('value :) ', value);
+    this.toggleDragMoving(true);
+    this.setValue(value);
+  }
+  private onDragMove(value: number) {
+    if (this.isDragging) {
+      this.setValue(value);
+      this.cdr.markForCheck();
+    }
+  }
+  private onDragEnd() {
+    this.toggleDragMoving(false);
+    this.cdr.markForCheck();
   }
 
-  private onDragMove(value: number) {}
+  private setValue(value: SliderValue) {
+    if (!this.valuesEqual(this.value, value)) {
+      this.value = value;
+      this.updateTrackAndHandles();
+    }
+  }
 
-  private onDragEnd() {}
+  private valuesEqual(valA: SliderValue, valB: SliderValue): boolean {
+    if (typeof valA !== typeof valB) {
+      return false;
+    }
+    return valA === valB;
+  }
 
-  // position / 滑块组件长度 === (val - min) / (max - min)
+  private updateTrackAndHandles() {
+    this.offset = this.getValueToOffset(this.value);
+    this.cdr.markForCheck();
+  }
+
+  private getValueToOffset(value: SliderValue): SliderValue {
+    return getPercent(this.wyMin, this.wyMax, value);
+  }
+
+  private toggleDragMoving(movable: boolean) {
+    this.isDragging = movable;
+    if (movable) {
+      this.subscribeDrag(['move', 'end']);
+    } else {
+      this.unsubscribeDrag(['move', 'end']);
+    }
+  }
+
   private findClosestValue(position: number): number {
     // 获取滑块总长
     const sliderLength = this.getSliderLength();
 
-    // 滑块 左||上 端点位置
+    // 滑块(左, 上)端点位置
     const sliderStart = this.getSliderStartPosition();
+
     // 滑块当前位置 / 滑块总长
     const ratio = limitNumberInRange(
       (position - sliderStart) / sliderLength,
       0,
       1
     );
-    // 垂直方向修正
-    const ratioPlus = this.wyVertical ? 1 - ratio : ratio;
-    return ratioPlus * (this.wyMax - this.wyMin) + this.wyMin;
+    const ratioTrue = this.wyVertical ? 1 - ratio : ratio;
+    return ratioTrue * (this.wyMax - this.wyMin) + this.wyMin;
   }
 
   private getSliderLength(): number {
@@ -158,5 +227,9 @@ export class WySliderComponent implements OnInit {
   private getSliderStartPosition(): number {
     const offset = getElementOffset(this.sliderDom);
     return this.wyVertical ? offset.top : offset.left;
+  }
+
+  ngOnDestroy(): void {
+    this.unsubscribeDrag();
   }
 }

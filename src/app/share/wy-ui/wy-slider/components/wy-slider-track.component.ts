@@ -16,9 +16,8 @@ interface Style {
 @Component({
   selector: 'app-wy-slider-track',
   template: `
-    <div class="wy-slider-track"></div>
+    <div class="wy-slider-track" [ngStyle]="style"></div>
   `,
-  styles: [],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class WySliderTrackComponent implements OnInit, OnChanges {
