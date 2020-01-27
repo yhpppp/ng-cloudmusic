@@ -16,14 +16,18 @@ interface Style {
 @Component({
   selector: 'app-wy-slider-track',
   template: `
-    <div class="wy-slider-track" [ngStyle]="style"></div>
+    <div
+      class="wy-slider-track"
+      [class.buffer]="wyBuffer"
+      [ngStyle]="style"
+    ></div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class WySliderTrackComponent implements OnInit, OnChanges {
   @Input() wyVertical = false;
+  @Input() wyBuffer = false;
   @Input() wyLength: number;
-
   style: Style = {};
   constructor() {}
 

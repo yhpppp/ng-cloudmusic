@@ -66,6 +66,7 @@ export class WySliderComponent
   @Input() wyVertical = false;
   @Input() wyMin = 0;
   @Input() wyMax = 100;
+  @Input() bufferOffset = 0;
 
   private sliderDom: HTMLDivElement;
   @ViewChild('wySlider', { static: true }) private wySlider: ElementRef;
