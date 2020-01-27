@@ -31,7 +31,7 @@ export class WySliderHandleComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     const offset = 'wyOffset';
     if (changes[offset]) {
-      this.style[this.wyVertical ? 'bootom' : 'left'] = this.wyOffset + '%';
+      this.style[this.wyVertical ? 'bottom' : 'left'] = this.wyOffset + '%';
     }
   }
 

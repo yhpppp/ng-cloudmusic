@@ -8,7 +8,8 @@ import {
   Inject,
   ChangeDetectorRef,
   OnDestroy,
-  ChangeDetectionStrategy
+  ChangeDetectionStrategy,
+  forwardRef
 } from '@angular/core';
 import { Observable, fromEvent, merge, Subscription } from 'rxjs';
 import {
@@ -23,6 +24,7 @@ import { DOCUMENT } from '@angular/common';
 import { getElementOffset } from 'ng-zorro-antd';
 import { limitNumberInRange, getPercent } from '../../../utils/number';
 import { inArray } from '../../../utils/array';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 interface SliderEventObserverConfig {
   start: string;
@@ -50,9 +52,17 @@ function sliderEvent(e: Event) {
   templateUrl: './wy-slider.component.html',
   styleUrls: ['./wy-slider.component.less'],
   encapsulation: ViewEncapsulation.None,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => WySliderComponent),
+      multi: true
+    }
+  ]
 })
-export class WySliderComponent implements OnInit, OnDestroy {
+export class WySliderComponent
+  implements OnInit, OnDestroy, ControlValueAccessor {
   @Input() wyVertical = false;
   @Input() wyMin = 0;
   @Input() wyMax = 100;
@@ -169,11 +179,32 @@ export class WySliderComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  private setValue(value: SliderValue) {
-    if (!this.valuesEqual(this.value, value)) {
+  private setValue(value: SliderValue, needCheck = false) {
+    if (needCheck) {
+      if (this.isDragging) {
+        return;
+      }
+      this.value = this.formatValue(value);
+      this.updateTrackAndHandles();
+    } else if (!this.valuesEqual(this.value, value)) {
       this.value = value;
       this.updateTrackAndHandles();
+      this.onValueChange(this.value);
     }
+  }
+
+  private formatValue(value: SliderValue): SliderValue {
+    let result = value;
+    if (this.isValidNum(result)) {
+      result = this.wyMin;
+    } else {
+      result = limitNumberInRange(result, this.wyMin, this.wyMax);
+    }
+    return result;
+  }
+
+  private isValidNum(value: SliderValue): boolean {
+    return isNaN(typeof value !== 'number' ? parseFloat(value) : value);
   }
 
   private valuesEqual(valA: SliderValue, valB: SliderValue): boolean {
@@ -227,6 +258,19 @@ export class WySliderComponent implements OnInit, OnDestroy {
   private getSliderStartPosition(): number {
     const offset = getElementOffset(this.sliderDom);
     return this.wyVertical ? offset.top : offset.left;
+  }
+
+  private onValueChange(value: SliderValue): void {}
+  private onTouched(value: SliderValue): void {}
+
+  writeValue(value: SliderValue): void {
+    this.setValue(value, true);
+  }
+  registerOnChange(fn: (value: SliderValue) => void): void {
+    this.onValueChange = fn;
+  }
+  registerOnTouched(fn: any): void {
+    this.onTouched = fn;
   }
 
   ngOnDestroy(): void {
