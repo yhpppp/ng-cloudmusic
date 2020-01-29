@@ -27,6 +27,10 @@ export class WyPlayerComponent implements OnInit {
   songlist: Song[];
   playList: Song[];
 
+  // 当前播放器显示的信息
+  duration: number;
+  currentTime: number;
+
   constructor(private store$: Store<AppStoreModule>) {
     const appStore$ = this.store$.pipe(select('player'));
 
@@ -69,13 +73,17 @@ export class WyPlayerComponent implements OnInit {
   }
 
   private watchCurrentSong(song: Song) {
+    if (!song) {
+      return;
+    }
     this.currentSong = song;
-    // console.log('song :) ', song);
+    this.duration = song.dt / 1000;
+    console.log('song :) ', song);
   }
 
   private watchMode(mode: PlayMode) {
     // this.songMode = mode
-    console.log('mode :) ', mode);
+    // console.log('mode :) ', mode);
   }
 
   private watchList(list: Song[], type: string) {
@@ -92,8 +100,18 @@ export class WyPlayerComponent implements OnInit {
     this.audioEl.play();
   }
 
+  get picUrl(): string {
+    return this.currentSong
+      ? this.currentSong.al.picUrl
+      : 'http://s4.music.126.net/style/web2/img/default/default_album.jpg';
+  }
+
   onPlay() {
     this.play();
+  }
+
+  onTimeUpdate(event: Event) {
+    this.currentTime = (event.target as HTMLAudioElement).currentTime;
   }
 
   ngOnInit() {
