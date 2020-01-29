@@ -49,4 +49,5 @@
       </div>
     </div>
   </div>
+  <audio #audio [src]="currentSong?.url" (canplay)="onPlay()"></audio>
 </div>
