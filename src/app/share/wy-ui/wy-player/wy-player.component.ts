@@ -20,8 +20,11 @@ import { SetCurrentIndex } from '../../../store/actions/player.action';
 export class WyPlayerComponent implements OnInit {
   @ViewChild('audio', { static: true }) private audio: ElementRef;
   private audioEl: HTMLAudioElement;
-  sliderValue = 66;
-  bufferOffset = 88;
+  // 进度条百分比
+  sliderValue = 0;
+  // 缓存条百分比
+  bufferOffset = 0;
+
   // 当前播放器所有数据
   currentIndex: number;
   currentSong: Song;
@@ -29,8 +32,8 @@ export class WyPlayerComponent implements OnInit {
   playList: Song[];
 
   // 当前播放器显示的信息
-  duration: number;
-  currentTime: number;
+  duration: number; // 歌曲总时长(秒)
+  currentTime: number; // 当前播放时间(秒)
 
   // 播放状态
 
@@ -114,12 +117,16 @@ export class WyPlayerComponent implements OnInit {
   }
 
   private loop() {
-    this.audioEl.currentTime = 0;
+    this.updateCurrentTime(0);
     this.play();
   }
   private updateIndex(index: number) {
     this.store$.dispatch(SetCurrentIndex({ currentIndex: index }));
     this.songReady = false; // why
+  }
+
+  private updateCurrentTime(time: number) {
+    this.audioEl.currentTime = time;
   }
 
   get picUrl(): string {
@@ -128,14 +135,16 @@ export class WyPlayerComponent implements OnInit {
       : 'http://s4.music.126.net/style/web2/img/default/default_album.jpg';
   }
 
+  // 播放
   onPlay() {
     this.songReady = true;
     this.play();
   }
+  // 暂停
   onPause() {
     this.pause();
   }
-
+  // 播放 | 暂停
   onPlayToggle() {
     if (this.songReady) {
       this.playing = !this.playing;
@@ -146,24 +155,44 @@ export class WyPlayerComponent implements OnInit {
       }
     }
   }
-
+  // 播放上一首
   onPlayPrev(index: number) {
     // 如是当前是第一首则返回最后一首;
     const newIndex = index <= 0 ? this.playList.length - 1 : index;
     this.updateIndex(newIndex);
   }
-
+  // 播放下一首
   onPlayNext(index: number) {
     // 如是当前最后一首则返回第一首;
     const newIndex = index >= this.playList.length ? 0 : index;
     this.updateIndex(newIndex);
   }
-  onPlayLoop() {
-    this.loop();
-  }
+  // 单曲循环
+  // onPlayLoop() {
+  //   this.loop();
+  // }
 
+  // 监听当前播放时间
   onTimeUpdate(event: Event) {
     this.currentTime = (event.target as HTMLAudioElement).currentTime;
+    // 进度条更新进度
+    this.sliderValue = (this.currentTime / this.duration) * 100;
+    // 缓冲条更新进度
+    const buffered = this.audioEl.buffered;
+
+    if (buffered.length && this.bufferOffset < 100) {
+      const bufferedEnd = buffered.end(0); // 获得缓冲范围的结束位置
+      this.bufferOffset = (bufferedEnd / this.duration) * 100;
+    }
+
+    // const buffered = this.audioEl.buffered;
+    // if (buffered.length && this.bufferPercent < 100) {
+  }
+
+  onSliderChange(emit: number) {
+    const time = this.duration * (emit / 100);
+
+    this.updateCurrentTime(time);
   }
 
   ngOnInit() {

@@ -9,7 +9,9 @@ import {
   ChangeDetectorRef,
   OnDestroy,
   ChangeDetectionStrategy,
-  forwardRef
+  forwardRef,
+  Output,
+  EventEmitter
 } from '@angular/core';
 import { Observable, fromEvent, merge, Subscription } from 'rxjs';
 import {
@@ -66,7 +68,8 @@ export class WySliderComponent
   @Input() wyVertical = false;
   @Input() wyMin = 0;
   @Input() wyMax = 100;
-  @Input() bufferOffset = 0;
+  @Input() bufferOffset = 0; // 缓存条百分比
+  @Output() DragEndSliderValue = new EventEmitter<SliderValue>();
 
   private sliderDom: HTMLDivElement;
   @ViewChild('wySlider', { static: true }) private wySlider: ElementRef;
@@ -81,6 +84,7 @@ export class WySliderComponent
   private isDragging = false;
 
   value: SliderValue = null;
+  // 进度条百分比
   offset: SliderValue = null;
 
   constructor(
@@ -176,6 +180,8 @@ export class WySliderComponent
     }
   }
   private onDragEnd() {
+    this.DragEndSliderValue.emit(this.offset);
+
     this.toggleDragMoving(false);
     this.cdr.markForCheck();
   }
