@@ -10,6 +10,7 @@ import {
 } from '../../../store/selectors/player.selector';
 import { Song } from '../../../services/data-types/common.types';
 import { PlayMode } from './player-type';
+import { SetCurrentIndex } from '../../../store/actions/player.action';
 
 @Component({
   selector: 'app-wy-player',
@@ -21,7 +22,7 @@ export class WyPlayerComponent implements OnInit {
   private audioEl: HTMLAudioElement;
   sliderValue = 66;
   bufferOffset = 88;
-
+  // 当前播放器所有数据
   currentIndex: number;
   currentSong: Song;
   songlist: Song[];
@@ -30,6 +31,13 @@ export class WyPlayerComponent implements OnInit {
   // 当前播放器显示的信息
   duration: number;
   currentTime: number;
+
+  // 播放状态
+
+  // 播放中
+  playing = false;
+  // 是否可以播放
+  songReady = false;
 
   constructor(private store$: Store<AppStoreModule>) {
     const appStore$ = this.store$.pipe(select('player'));
@@ -98,6 +106,20 @@ export class WyPlayerComponent implements OnInit {
 
   private play() {
     this.audioEl.play();
+    this.playing = true;
+  }
+
+  private pause() {
+    this.audioEl.pause();
+  }
+
+  private loop() {
+    this.audioEl.currentTime = 0;
+    this.play();
+  }
+  private updateIndex(index: number) {
+    this.store$.dispatch(SetCurrentIndex({ currentIndex: index }));
+    this.songReady = false; // why
   }
 
   get picUrl(): string {
@@ -107,7 +129,37 @@ export class WyPlayerComponent implements OnInit {
   }
 
   onPlay() {
+    this.songReady = true;
     this.play();
+  }
+  onPause() {
+    this.pause();
+  }
+
+  onPlayToggle() {
+    if (this.songReady) {
+      this.playing = !this.playing;
+      if (this.playing) {
+        this.onPlay();
+      } else {
+        this.onPause();
+      }
+    }
+  }
+
+  onPlayPrev(index: number) {
+    // 如是当前是第一首则返回最后一首;
+    const newIndex = index <= 0 ? this.playList.length - 1 : index;
+    this.updateIndex(newIndex);
+  }
+
+  onPlayNext(index: number) {
+    // 如是当前最后一首则返回第一首;
+    const newIndex = index >= this.playList.length ? 0 : index;
+    this.updateIndex(newIndex);
+  }
+  onPlayLoop() {
+    this.loop();
   }
 
   onTimeUpdate(event: Event) {
