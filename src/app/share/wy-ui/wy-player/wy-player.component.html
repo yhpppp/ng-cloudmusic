@@ -39,8 +39,8 @@
       </div>
       <div class="ctrl">
         <i class="volume" title="音量" (click)="onToggleVol()"></i>
-        <!-- <i class="random"></i> -->
-        <i class="loop" title="循环"></i>
+        <!-- <i class="loop" (click)="onModeChange()"></i> -->
+        <i [ngClass]="currentMode.type" [title]="currentMode.label" (click)="onModeChange()"></i>
         <!-- <i class="singleLoop"></i> -->
         <p class="open">
           <span></span>
@@ -52,5 +52,6 @@
       </div>
     </div>
   </div>
-  <audio #audio [src]="currentSong?.url" (canplay)="onPlay()" (timeupdate)="onTimeUpdate($event)"></audio>
+  <audio #audio [src]="currentSong?.url" (canplay)="onPlay()" (timeupdate)="onTimeUpdate($event)"
+    (ended)="onEnded()"></audio>
 </div>

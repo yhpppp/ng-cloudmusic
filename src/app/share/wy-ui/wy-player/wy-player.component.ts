@@ -16,9 +16,30 @@ import {
 } from '../../../store/selectors/player.selector';
 import { Song } from '../../../services/data-types/common.types';
 import { PlayMode } from './player-type';
-import { SetCurrentIndex } from '../../../store/actions/player.action';
+import {
+  SetCurrentIndex,
+  SetPlayMode,
+  SetPlayList
+} from '../../../store/actions/player.action';
 import { DOCUMENT } from '@angular/common';
 import { Subscription, fromEvent } from 'rxjs';
+import { shuffle } from '../../../utils/array';
+
+// 歌曲模式列表哦
+const modeList: PlayMode[] = [
+  {
+    type: 'loop',
+    label: '循环'
+  },
+  {
+    type: 'random',
+    label: '随机'
+  },
+  {
+    type: 'singleLoop',
+    label: '单曲循环'
+  }
+];
 
 @Component({
   selector: 'app-wy-player',
@@ -58,6 +79,9 @@ export class WyPlayerComponent implements OnInit {
   // 初始化全局click时间线订阅容器
   private windowClick: Subscription;
 
+  // 当前歌曲模式
+  currentMode: PlayMode;
+  modeCount = 0;
   constructor(
     private store$: Store<AppStoreModule>,
     @Inject(DOCUMENT) private doc: Document
@@ -112,8 +136,23 @@ export class WyPlayerComponent implements OnInit {
   }
 
   private watchMode(mode: PlayMode) {
-    // this.songMode = mode
-    // console.log('mode :) ', mode);
+    this.currentMode = mode;
+    console.log('mode :) ', mode);
+    if (this.songlist) {
+      let list = this.songlist.slice();
+      if (mode.type === 'random') {
+        list = shuffle(list.slice());
+        this.updateCurrentIndex(list, this.currentSong);
+        this.store$.dispatch(SetPlayList({ playList: list }));
+
+        // console.log('list :) ', list);
+      }
+    }
+  }
+
+  private updateCurrentIndex(list: Song[], song: Song) {
+    const newIndex = list.findIndex(it => it.id === song.id);
+    this.store$.dispatch(SetCurrentIndex({ currentIndex: newIndex }));
   }
 
   private watchList(list: Song[], type: string) {
@@ -135,7 +174,7 @@ export class WyPlayerComponent implements OnInit {
     this.audioEl.pause();
   }
 
-  private loop() {
+  private singleLoop() {
     this.updateCurrentTime(0);
     this.play();
   }
@@ -175,6 +214,7 @@ export class WyPlayerComponent implements OnInit {
     }
     this.windowClick.unsubscribe();
   }
+
   // 播放
   onPlay() {
     this.songReady = true;
@@ -250,6 +290,21 @@ export class WyPlayerComponent implements OnInit {
       this.bindDocumentClickListener();
     } else {
       this.unbindDocumentClickListener();
+    }
+  }
+
+  // 切换播放模式
+  onModeChange() {
+    this.store$.dispatch(
+      SetPlayMode({ playMode: modeList[++this.modeCount % 3] })
+    );
+  }
+  // 监听播放结束时
+  onEnded() {
+    if (this.currentMode.type === 'singleLoop') {
+      this.singleLoop();
+    } else {
+      this.onPlayNext(this.currentIndex + 1);
     }
   }
   ngOnInit() {
