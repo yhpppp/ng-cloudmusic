@@ -1,4 +1,4 @@
-<div class="m-player">
+<div class="m-player" (click)="isSelfClick = true">
   <div class="lock">
     <div class="left"><i></i></div>
   </div>
@@ -38,14 +38,14 @@
         <i class="share" title="分享"></i>
       </div>
       <div class="ctrl">
-        <i class="volume" title="音量"></i>
+        <i class="volume" title="音量" (click)="onToggleVol()"></i>
         <!-- <i class="random"></i> -->
         <i class="loop" title="循环"></i>
         <!-- <i class="singleLoop"></i> -->
         <p class="open">
           <span></span>
         </p>
-        <div class="control-vol" [hidden]="false">
+        <div class="control-vol" [hidden]="!isShowVolBar">
           <app-wy-slider [wyVertical]="true" [(ngModel)]="volume" (ngModelChange)="onVolumeChange($event)">
           </app-wy-slider>
         </div>

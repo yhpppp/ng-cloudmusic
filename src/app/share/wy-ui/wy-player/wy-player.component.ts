@@ -1,4 +1,10 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  ElementRef,
+  Inject
+} from '@angular/core';
 import { Store, select } from '@ngrx/store';
 import { AppStoreModule } from '../../../store';
 import {
@@ -11,6 +17,8 @@ import {
 import { Song } from '../../../services/data-types/common.types';
 import { PlayMode } from './player-type';
 import { SetCurrentIndex } from '../../../store/actions/player.action';
+import { DOCUMENT } from '@angular/common';
+import { Subscription, fromEvent } from 'rxjs';
 
 @Component({
   selector: 'app-wy-player',
@@ -43,7 +51,17 @@ export class WyPlayerComponent implements OnInit {
   // 是否可以播放
   songReady = false;
 
-  constructor(private store$: Store<AppStoreModule>) {
+  // 显示音量栏
+  isShowVolBar = false;
+  // 是否点击自身组件
+  isSelfClick = false;
+  // 初始化全局click时间线订阅容器
+  private windowClick: Subscription;
+
+  constructor(
+    private store$: Store<AppStoreModule>,
+    @Inject(DOCUMENT) private doc: Document
+  ) {
     const appStore$ = this.store$.pipe(select('player'));
 
     const stateArray = [
@@ -136,6 +154,27 @@ export class WyPlayerComponent implements OnInit {
       : 'http://s4.music.126.net/style/web2/img/default/default_album.jpg';
   }
 
+  private bindDocumentClickListener() {
+    // 有全局click时间线不再创建
+    if (this.windowClick) {
+      return;
+    }
+    // 判断是否在其他组件点击
+    this.windowClick = fromEvent(this.doc, 'click').subscribe(() => {
+      if (!this.isSelfClick) {
+        // 点击了播放器以外的部分,隐藏音量
+        this.isShowVolBar = false;
+        this.unbindDocumentClickListener();
+      }
+      this.isSelfClick = false;
+    });
+  }
+  private unbindDocumentClickListener() {
+    if (this.windowClick) {
+      return;
+    }
+    this.windowClick.unsubscribe();
+  }
   // 播放
   onPlay() {
     this.songReady = true;
@@ -196,10 +235,19 @@ export class WyPlayerComponent implements OnInit {
     this.updateCurrentTime(time);
   }
 
+  // 改变音量大小
   onVolumeChange(vol: number) {
-    console.log('vol :) ', vol);
-
     this.audioEl.volume = vol / 100; // 0 - 1 音量
+  }
+
+  // 切换音量显示
+  onToggleVol() {
+    this.isShowVolBar = !this.isShowVolBar;
+    if (this.isShowVolBar) {
+      this.bindDocumentClickListener();
+    } else {
+      this.unbindDocumentClickListener();
+    }
   }
   ngOnInit() {
     this.audioEl = this.audio.nativeElement;
