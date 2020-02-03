@@ -230,6 +230,9 @@ export class WyPlayerComponent implements OnInit {
   }
   // 更新进度
   onSliderChange(emit: number) {
+    if (!this.currentSong) {
+      return;
+    }
     const time = this.duration * (emit / 100);
 
     this.updateCurrentTime(time);
