@@ -30,6 +30,7 @@ export class WyPlayerComponent implements OnInit {
   currentSong: Song;
   songlist: Song[];
   playList: Song[];
+  volume = 50;
 
   // 当前播放器显示的信息
   duration: number; // 歌曲总时长(秒)
@@ -188,13 +189,18 @@ export class WyPlayerComponent implements OnInit {
     // const buffered = this.audioEl.buffered;
     // if (buffered.length && this.bufferPercent < 100) {
   }
-
+  // 更新进度
   onSliderChange(emit: number) {
     const time = this.duration * (emit / 100);
 
     this.updateCurrentTime(time);
   }
 
+  onVolumeChange(vol: number) {
+    console.log('vol :) ', vol);
+
+    this.audioEl.volume = vol / 100; // 0 - 1 音量
+  }
   ngOnInit() {
     this.audioEl = this.audio.nativeElement;
   }

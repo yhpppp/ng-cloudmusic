@@ -45,8 +45,9 @@
         <p class="open">
           <span></span>
         </p>
-        <div class="control-vol" [hidden]="true">
-          <app-wy-slider [wyVertical]="true" [(ngModel)]="sliderValue"></app-wy-slider>
+        <div class="control-vol" [hidden]="false">
+          <app-wy-slider [wyVertical]="true" [(ngModel)]="volume" (ngModelChange)="onVolumeChange($event)">
+          </app-wy-slider>
         </div>
       </div>
     </div>
