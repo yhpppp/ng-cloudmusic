@@ -38,11 +38,11 @@
         <i class="share" title="分享"></i>
       </div>
       <div class="ctrl">
-        <i class="volume" title="音量" (click)="onToggleVol()"></i>
+        <i class="volume" title="音量" (click)="onVolPanel()"></i>
         <!-- <i class="loop" (click)="onModeChange()"></i> -->
         <i [ngClass]="currentMode.type" [title]="currentMode.label" (click)="onModeChange()"></i>
         <!-- <i class="singleLoop"></i> -->
-        <p class="open">
+        <p class="open" (click)="onListPanel()">
           <span></span>
         </p>
         <div class="control-vol" [hidden]="!isShowVolBar">
@@ -50,8 +50,12 @@
           </app-wy-slider>
         </div>
       </div>
+      <app-wy-player-panel [songlist]="songlist" [currentSong]="currentSong" [currentIndex]="currentIndex"
+        [show]="isShowListBanel" (opChangeSong)="onChangeSong($event)" (opClose)="isShowListBanel = false">
+      </app-wy-player-panel>
     </div>
   </div>
   <audio #audio [src]="currentSong?.url" (canplay)="onPlay()" (timeupdate)="onTimeUpdate($event)"
     (ended)="onEnded()"></audio>
+
 </div>

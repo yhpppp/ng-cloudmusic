@@ -14,7 +14,7 @@ import {
   getPlayMode,
   getCurrentSong
 } from '../../../store/selectors/player.selector';
-import { Song } from '../../../services/data-types/common.types';
+import { Song, Singer } from '../../../services/data-types/common.types';
 import { PlayMode } from './player-type';
 import {
   SetCurrentIndex,
@@ -59,7 +59,7 @@ export class WyPlayerComponent implements OnInit {
   currentSong: Song;
   songlist: Song[];
   playList: Song[];
-  volume = 50;
+  volume = 20;
 
   // 当前播放器显示的信息
   duration: number; // 歌曲总时长(秒)
@@ -74,6 +74,7 @@ export class WyPlayerComponent implements OnInit {
 
   // 显示音量栏
   isShowVolBar = false;
+
   // 是否点击自身组件
   isSelfClick = false;
   // 初始化全局click时间线订阅容器
@@ -82,6 +83,9 @@ export class WyPlayerComponent implements OnInit {
   // 当前歌曲模式
   currentMode: PlayMode;
   modeCount = 0;
+
+  // 显示面板
+  isShowListBanel = false;
   constructor(
     private store$: Store<AppStoreModule>,
     @Inject(DOCUMENT) private doc: Document
@@ -149,7 +153,7 @@ export class WyPlayerComponent implements OnInit {
       }
     }
   }
-
+  // 更新当前歌曲
   private updateCurrentIndex(list: Song[], song: Song) {
     const newIndex = list.findIndex(it => it.id === song.id);
     this.store$.dispatch(SetCurrentIndex({ currentIndex: newIndex }));
@@ -203,6 +207,7 @@ export class WyPlayerComponent implements OnInit {
       if (!this.isSelfClick) {
         // 点击了播放器以外的部分,隐藏音量
         this.isShowVolBar = false;
+        this.isShowListBanel = false;
         this.unbindDocumentClickListener();
       }
       this.isSelfClick = false;
@@ -284,9 +289,12 @@ export class WyPlayerComponent implements OnInit {
   }
 
   // 切换音量显示
-  onToggleVol() {
-    this.isShowVolBar = !this.isShowVolBar;
-    if (this.isShowVolBar) {
+  onVolPanel() {
+    this.onTogglePanel('isShowVolBar');
+  }
+  onTogglePanel(type: string) {
+    this[type] = !this[type];
+    if (this.isShowVolBar || this.isShowListBanel) {
       this.bindDocumentClickListener();
     } else {
       this.unbindDocumentClickListener();
@@ -307,7 +315,22 @@ export class WyPlayerComponent implements OnInit {
       this.onPlayNext(this.currentIndex + 1);
     }
   }
+
   ngOnInit() {
     this.audioEl = this.audio.nativeElement;
+  }
+
+  /**
+   * 面板子组件
+   */
+
+  onChangeSong(song: Song) {
+    this.updateCurrentIndex(this.playList, song);
+  }
+
+  onListPanel() {
+    if (this.playList.length) {
+      this.onTogglePanel('isShowListBanel');
+    }
   }
 }
