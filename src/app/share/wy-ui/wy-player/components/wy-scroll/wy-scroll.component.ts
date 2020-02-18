@@ -8,7 +8,9 @@ import {
   AfterViewInit,
   OnChanges,
   SimpleChanges,
-  Input
+  Input,
+  Output,
+  EventEmitter
 } from '@angular/core';
 import BScroll from '@better-scroll/core';
 import ScrollBar from '@better-scroll/scroll-bar';
@@ -40,12 +42,13 @@ export class WyScrollComponent implements OnInit, AfterViewInit, OnChanges {
   private bs: BScroll;
 
   @Input() private data: [];
+  @Output() private opScrollEnd = new EventEmitter<number>();
 
-  constructor() {}
+  constructor(readonly el: ElementRef) {}
 
   // 重新计算 BetterScroll，当 DOM 结构发生变化的时候务必要调用确保滚动的效果正常
   private refresh() {
-    console.log('refreshed :) ');
+    // console.log('refreshed :) ');
     this.bs.refresh();
   }
 
@@ -55,11 +58,15 @@ export class WyScrollComponent implements OnInit, AfterViewInit, OnChanges {
       this.refresh();
     }, 50);
   }
-
+  // 改变
+  scrollToElement(...args) {
+    // console.log('args :) ', args);
+    this.bs.scrollToElement.apply(this.bs, args);
+  }
   ngOnChanges(changes: SimpleChanges): void {
     const target = 'data';
     if (changes[target]) {
-      console.log('数据刷新时... ', this.wrapRef.nativeElement.offsetHeight);
+      // console.log('数据刷新时... ', this.wrapRef.nativeElement.offsetHeight);
       this.asyncRefresh();
     }
   }
@@ -75,6 +82,9 @@ export class WyScrollComponent implements OnInit, AfterViewInit, OnChanges {
         interactive: true // 滚动条是否可以交互
       },
       mouseWheel: {}
+    });
+    this.bs.on('scrollEnd', ({ y }) => {
+      this.opScrollEnd.emit(y);
     });
   }
 }

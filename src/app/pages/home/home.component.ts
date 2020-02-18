@@ -58,7 +58,7 @@ export class HomeComponent implements OnInit {
   }
   // 1
   onPlayList(id: number) {
-    console.log('on :) ');
+    // console.log('on :) ');
 
     this.songListService.playSongList(id).subscribe(res => {
       console.log('res :) ', res);

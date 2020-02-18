@@ -59,7 +59,7 @@ export class WyPlayerComponent implements OnInit {
   currentSong: Song;
   songlist: Song[];
   playList: Song[];
-  volume = 20;
+  volume = 2;
 
   // 当前播放器显示的信息
   duration: number; // 歌曲总时长(秒)
@@ -136,12 +136,12 @@ export class WyPlayerComponent implements OnInit {
     }
     this.currentSong = song;
     this.duration = song.dt / 1000;
-    console.log('song :) ', song);
+    // console.log('song :) ', song);
   }
 
   private watchMode(mode: PlayMode) {
     this.currentMode = mode;
-    console.log('mode :) ', mode);
+    // console.log('mode :) ', mode);
     if (this.songlist) {
       let list = this.songlist.slice();
       if (mode.type === 'random') {
