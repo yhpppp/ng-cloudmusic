@@ -12,7 +12,8 @@ import {
   getPlayList,
   getCurrentIndex,
   getPlayMode,
-  getCurrentSong
+  getCurrentSong,
+  getPlayer
 } from '../../../store/selectors/player.selector';
 import { Song, Singer } from '../../../services/data-types/common.types';
 import { PlayMode } from './player-type';
@@ -23,7 +24,7 @@ import {
 } from '../../../store/actions/player.action';
 import { DOCUMENT } from '@angular/common';
 import { Subscription, fromEvent } from 'rxjs';
-import { shuffle } from '../../../utils/array';
+import { shuffle, findIndex } from '../../../utils/array';
 
 // 歌曲模式列表哦
 const modeList: PlayMode[] = [
@@ -57,7 +58,7 @@ export class WyPlayerComponent implements OnInit {
   // 当前播放器所有数据
   currentIndex: number;
   currentSong: Song;
-  songlist: Song[];
+  songList: Song[];
   playList: Song[];
   volume = 2;
 
@@ -90,44 +91,57 @@ export class WyPlayerComponent implements OnInit {
     private store$: Store<AppStoreModule>,
     @Inject(DOCUMENT) private doc: Document
   ) {
-    const appStore$ = this.store$.pipe(select('player'));
+    const appStore$ = this.store$.pipe(select(getPlayer));
 
-    const stateArray = [
-      {
-        type: getSongList,
-        fn: list => {
-          this.watchList(list, 'songlist');
-        }
-      },
-      {
-        type: getPlayList,
-        fn: list => {
-          this.watchList(list, 'playList');
-        }
-      },
-      {
-        type: getCurrentIndex,
-        fn: index => {
-          this.watchCurrentIndex(index);
-        }
-      },
-      {
-        type: getPlayMode,
-        fn: mode => {
-          this.watchMode(mode);
-        }
-      },
-      {
-        type: getCurrentSong,
-        fn: song => {
-          this.watchCurrentSong(song);
-        }
-      }
-    ];
-
-    stateArray.forEach(item => {
-      appStore$.pipe(select(item.type)).subscribe(item.fn);
-    });
+    // const stateArray = [
+    //   {
+    //     type: getSongList,
+    //     fn: list => {
+    //       this.watchList(list, 'songlist');
+    //     }
+    //   },
+    //   {
+    //     type: getPlayList,
+    //     fn: list => {
+    //       this.watchList(list, 'playList');
+    //     }
+    //   },
+    //   {
+    //     type: getCurrentIndex,
+    //     fn: index => {
+    //       this.watchCurrentIndex(index);
+    //     }
+    //   },
+    //   {
+    //     type: getPlayMode,
+    //     fn: mode => {
+    //       this.watchMode(mode);
+    //     }
+    //   },
+    //   {
+    //     type: getCurrentSong,
+    //     fn: song => {
+    //       this.watchCurrentSong(song);
+    //     }
+    //   }
+    // ];
+    // stateArray.forEach(item => {
+    //   appStore$.pipe(select(item.type)).subscribe(item.fn);
+    // });
+    appStore$
+      .pipe(select(getSongList))
+      .subscribe(list => this.watchList(list, 'songList'));
+    appStore$
+      .pipe(select(getPlayList))
+      .subscribe(list => this.watchList(list, 'playList'));
+    appStore$
+      .pipe(select(getCurrentIndex))
+      .subscribe(index => this.watchCurrentIndex(index));
+    appStore$.pipe(select(getPlayMode)).subscribe(mode => this.watchMode(mode));
+    appStore$
+      .pipe(select(getCurrentSong))
+      .subscribe(song => this.watchCurrentSong(song));
+    // appStore$.pipe(select(getCurrentAction)).subscribe(action => this.watchCurrentAction(action));
   }
 
   private watchCurrentSong(song: Song) {
@@ -142,20 +156,20 @@ export class WyPlayerComponent implements OnInit {
   private watchMode(mode: PlayMode) {
     this.currentMode = mode;
     // console.log('mode :) ', mode);
-    if (this.songlist) {
-      let list = this.songlist.slice();
+    if (this.songList) {
+      let list = this.songList.slice();
       if (mode.type === 'random') {
         list = shuffle(list.slice());
-        this.updateCurrentIndex(list, this.currentSong);
-        this.store$.dispatch(SetPlayList({ playList: list }));
-
-        // console.log('list :) ', list);
       }
+      this.updateCurrentIndex(list, this.currentSong);
+      this.store$.dispatch(SetPlayList({ playList: list }));
+
+      // console.log('list :) ', list);
     }
   }
   // 更新当前歌曲
   private updateCurrentIndex(list: Song[], song: Song) {
-    const newIndex = list.findIndex(it => it.id === song.id);
+    const newIndex = findIndex(list, song);
     this.store$.dispatch(SetCurrentIndex({ currentIndex: newIndex }));
   }
 
@@ -243,7 +257,8 @@ export class WyPlayerComponent implements OnInit {
   // 播放上一首
   onPlayPrev(index: number) {
     // 如是当前是第一首则返回最后一首;
-    const newIndex = index <= 0 ? this.playList.length - 1 : index;
+    const newIndex = index < 0 ? this.playList.length - 1 : index;
+
     this.updateIndex(newIndex);
   }
   // 播放下一首

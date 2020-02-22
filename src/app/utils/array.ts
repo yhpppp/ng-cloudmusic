@@ -1,3 +1,5 @@
+import { Song } from '../services/data-types/common.types';
+
 // 去两个数之前的随机数
 function getRandomInt(range: [number, number]): number {
   return Math.floor(Math.random() * (range[1] - range[0] + 1) + range[0]);
@@ -15,7 +17,10 @@ export function shuffle<T>(array: T[]): T[] {
 
     [result[i], result[j]] = [result[j], result[i]];
   }
-  console.log('result :) ', result);
 
   return result;
+}
+// 根据当前歌曲id找到列表对应的下标
+export function findIndex(list: Song[], currentSong: Song): number {
+  return list.findIndex(item => item.id === currentSong.id);
 }

@@ -50,8 +50,8 @@
           </app-wy-slider>
         </div>
       </div>
-      <app-wy-player-panel [songlist]="songlist" [currentSong]="currentSong" [currentIndex]="currentIndex"
-        [show]="isShowListBanel" (opChangeSong)="onChangeSong($event)" (opClose)="isShowListBanel = false">
+      <app-wy-player-panel [songlist]="songList" [currentSong]="currentSong" [show]="isShowListBanel"
+        (opChangeSong)="onChangeSong($event)" (opClose)="isShowListBanel = false">
       </app-wy-player-panel>
     </div>
   </div>
