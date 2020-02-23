@@ -2,7 +2,7 @@ import { Injectable, Inject } from '@angular/core';
 import { ServicesModule, API_CONF } from './services.module';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { SongList, SongUrl, Song } from './data-types/common.types';
+import { SongList, SongUrl, Song, Lyric } from './data-types/common.types';
 import { map } from 'rxjs/internal/operators';
 
 @Injectable({
@@ -49,5 +49,15 @@ export class SongService {
       }
     });
     return result;
+  }
+
+  // 请求歌词信息
+  getLyric(id: number): Observable<Lyric> {
+    const params = new HttpParams().set('id', id.toString());
+    return this.http.get(this.uri + 'lyric', { params }).pipe(
+      map(res => {
+        return res as Lyric;
+      })
+    );
   }
 }

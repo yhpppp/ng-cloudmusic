@@ -48,3 +48,8 @@ export interface SongUrl {
   id: number;
   url: string;
 }
+
+export interface Lyric {
+  lrc: string;
+  tlyric: string;
+}

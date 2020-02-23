@@ -13,6 +13,7 @@ import { Song } from '../../../../../services/data-types/common.types';
 import { WyScrollComponent } from '../wy-scroll/wy-scroll.component';
 import { findIndex } from '../../../../../utils/array';
 import { timer } from 'rxjs';
+import { SongService } from '../../../../../services/song.service';
 
 @Component({
   selector: 'app-wy-player-panel',
@@ -31,7 +32,7 @@ export class WyPlayerPanelComponent implements OnChanges, OnInit {
   @ViewChildren(WyScrollComponent) private wyScroll: QueryList<
     WyScrollComponent
   >;
-  constructor() {}
+  constructor(private songService: SongService) {}
   // 更新滚动条位置
   private scrollToCurrent(speed = 300) {
     // 获取当前列表所有li
@@ -55,6 +56,12 @@ export class WyPlayerPanelComponent implements OnChanges, OnInit {
         this.wyScroll.first.scrollToElement(currentLi, speed, false, false);
       }
     }
+  }
+  // 更新歌词信息
+  private updateLyric() {
+    this.songService.getLyric(this.currentSong.id).subscribe(res => {
+      console.log('res :) ', res);
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -88,9 +95,11 @@ export class WyPlayerPanelComponent implements OnChanges, OnInit {
       // console.log('currentSong :) ', this.currentSong);
 
       if (this.currentSong) {
-        // 更新当前歌曲下标
         if (this.currentSong) {
+          // 更新当前歌曲下标
           this.currentIndex = findIndex(this.songlist, this.currentSong);
+          // 更新当前歌词信息
+          this.updateLyric();
           if (this.show) {
             // 切歌时滚动位置更新
             this.scrollToCurrent();
