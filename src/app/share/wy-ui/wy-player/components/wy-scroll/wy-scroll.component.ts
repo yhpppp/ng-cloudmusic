@@ -15,6 +15,7 @@ import {
 import BScroll from '@better-scroll/core';
 import ScrollBar from '@better-scroll/scroll-bar';
 import MouseWheel from '@better-scroll/mouse-wheel';
+import { timer } from 'rxjs';
 BScroll.use(MouseWheel);
 BScroll.use(ScrollBar);
 
@@ -54,9 +55,9 @@ export class WyScrollComponent implements OnInit, AfterViewInit, OnChanges {
 
   // 等待列表数据加载完成后刷新
   asyncRefresh() {
-    setTimeout(() => {
+    timer(50).subscribe(() => {
       this.refresh();
-    }, 50);
+    });
   }
   // 改变
   scrollToElement(...args) {

@@ -12,6 +12,7 @@ import {
 import { Song } from '../../../../../services/data-types/common.types';
 import { WyScrollComponent } from '../wy-scroll/wy-scroll.component';
 import { findIndex } from '../../../../../utils/array';
+import { timer } from 'rxjs';
 
 @Component({
   selector: 'app-wy-player-panel',
@@ -71,9 +72,10 @@ export class WyPlayerPanelComponent implements OnChanges, OnInit {
         // console.log(' 显示面板时...', this.wyScroll);
         this.wyScroll.first.asyncRefresh();
         // 打开面板时滚动到当前位置
-        setTimeout(() => {
+
+        timer(90).subscribe(() => {
           this.scrollToCurrent(0);
-        }, 90);
+        });
       }
     }
 
