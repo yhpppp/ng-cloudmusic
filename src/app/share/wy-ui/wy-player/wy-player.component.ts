@@ -3,7 +3,8 @@ import {
   OnInit,
   ViewChild,
   ElementRef,
-  Inject
+  Inject,
+  OnChanges
 } from '@angular/core';
 import { Store, select } from '@ngrx/store';
 import { AppStoreModule } from '../../../store';
@@ -60,7 +61,7 @@ export class WyPlayerComponent implements OnInit {
   currentSong: Song;
   songList: Song[];
   playList: Song[];
-  volume = 2;
+  volume: number;
 
   // 当前播放器显示的信息
   duration: number; // 歌曲总时长(秒)
@@ -333,6 +334,8 @@ export class WyPlayerComponent implements OnInit {
 
   ngOnInit() {
     this.audioEl = this.audio.nativeElement;
+    this.onVolumeChange(10);
+    // console.log('this.audioEl.volume :) ', this.audioEl.volume);
   }
 
   /**
