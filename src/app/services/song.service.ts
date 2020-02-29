@@ -43,7 +43,7 @@ export class SongService {
   private generateSongList(songs: Song[], urls: SongUrl[]): Song[] {
     const result = [];
     songs.forEach(song => {
-      const url = urls.find(url => url.id === song.id).url;
+      const url = urls.find(item => item.id === song.id).url;
       if (url) {
         result.push({ ...song, url });
       }
@@ -55,9 +55,17 @@ export class SongService {
   getLyric(id: number): Observable<Lyric> {
     const params = new HttpParams().set('id', id.toString());
     return this.http.get(this.uri + 'lyric', { params }).pipe(
-      map(res => {
-        return res as Lyric;
+      map((res: { [key: string]: { lyric: string } }) => {
+        return {
+          lyric: res.lrc.lyric,
+          tlyric: res.tlyric.lyric
+        };
       })
     );
   }
 }
+// .pipe(map((res: { [key: string]: { lyric: string; } }) => {
+//   return {
+//     lyric: res.lrc.lyric,
+//     tlyric: res.tlyric.lyric,
+//   }

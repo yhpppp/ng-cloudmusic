@@ -14,6 +14,7 @@ import { WyScrollComponent } from '../wy-scroll/wy-scroll.component';
 import { findIndex } from '../../../../../utils/array';
 import { timer } from 'rxjs';
 import { SongService } from '../../../../../services/song.service';
+import { BaseLyricLine, WyLyric } from './wy-lyric';
 
 @Component({
   selector: 'app-wy-player-panel',
@@ -29,6 +30,9 @@ export class WyPlayerPanelComponent implements OnChanges, OnInit {
   @Output() opClose = new EventEmitter();
 
   scrollY = 0;
+  // 歌词
+  currentLyric: BaseLyricLine[];
+
   @ViewChildren(WyScrollComponent) private wyScroll: QueryList<
     WyScrollComponent
   >;
@@ -61,6 +65,9 @@ export class WyPlayerPanelComponent implements OnChanges, OnInit {
   private updateLyric() {
     this.songService.getLyric(this.currentSong.id).subscribe(res => {
       console.log('res :) ', res);
+      const lyric = new WyLyric(res);
+
+      this.currentLyric = lyric.lines;
     });
   }
 
@@ -76,8 +83,9 @@ export class WyPlayerPanelComponent implements OnChanges, OnInit {
 
       // 更新显示滚动条
       if (!changes[show].firstChange && this.show) {
-        // console.log(' 显示面板时...', this.wyScroll);
+        // 刷新面板
         this.wyScroll.first.asyncRefresh();
+        this.wyScroll.last.asyncRefresh();
         // 打开面板时滚动到当前位置
 
         timer(90).subscribe(() => {
