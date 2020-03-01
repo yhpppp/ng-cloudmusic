@@ -1,5 +1,5 @@
 import { Lyric } from '../../../../../services/data-types/common.types';
-import { Observable, zip, from } from 'rxjs';
+import { Observable, zip, from, Subject } from 'rxjs';
 import { skip } from 'rxjs/internal/operators';
 // [00:34.940]
 // 歌词时间正则
@@ -13,9 +13,21 @@ export interface BaseLyricLine {
 interface LyricLine extends BaseLyricLine {
   time: number;
 }
+
+interface Handler extends BaseLyricLine {
+  lineNum: number;
+}
+
 export class WyLyric {
   private lrc: Lyric;
   lines: LyricLine[] = [];
+  private playing = false;
+  private curNum: number;
+  private startStamp: number;
+  private timer: any;
+  // 暂停时的时间
+  private pauseStamp: number;
+  handler = new Subject<Handler>();
 
   constructor(lrc: Lyric) {
     this.lrc = lrc;
@@ -112,5 +124,74 @@ export class WyLyric {
     zipLines$.subscribe(([line, tLine]) => {
       this.makeLine(line, tLine);
     });
+  }
+
+  // 根据时间获取当前行的下标
+  private findCurNum(time: number): number {
+    const index = this.lines.findIndex(item => item.time <= time);
+    return index === -1 ? this.lines.length - 1 : index;
+  }
+
+  //
+  callHandler(index: number) {
+    this.handler.next({
+      txt: this.lines[index].txt,
+      txtCn: this.lines[index].txtCn,
+      lineNum: index
+    });
+  }
+  //
+  private playReset() {
+    // 获取当前行的数据
+    const line = this.lines[this.curNum];
+    const delay = line.time - (Date.now() - this.startStamp);
+    console.log('delay :) ', delay);
+    this.timer = setTimeout(() => {
+      this.callHandler(this.curNum++);
+      if (this.curNum < this.lines.length && this.playing) {
+        this.playReset();
+      }
+    }, delay);
+  }
+
+  private stop() {
+    if (this.playing) {
+      this.playing = false;
+    }
+    clearTimeout(this.timer);
+  }
+
+  // 播放歌词
+  play(startTime = 0) {
+    if (!this.lines.length) {
+      return;
+    }
+    if (!this.playing) {
+      this.playing = true;
+    }
+
+    this.curNum = this.findCurNum(startTime);
+    console.log('this.curNum :) ', this.curNum);
+    this.startStamp = Date.now() - startTime;
+    console.log('this.startStamp :) ', this.startStamp);
+
+    // 不是最后结尾时继续更新歌词位置
+    if (this.curNum < this.lines.length) {
+      clearTimeout(this.timer);
+      this.playReset();
+    }
+  }
+
+  // 播放暂停歌词
+  togglePlay(playing: boolean) {
+    const now = Date.now();
+    this.playing = playing;
+    if (playing) {
+      const startTime = (this.pauseStamp || now) - (this.startStamp || now);
+      this.play(startTime);
+    } else {
+      this.stop();
+      this.pauseStamp = now;
+    }
   }
 }

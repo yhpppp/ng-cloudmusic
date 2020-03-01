@@ -64,6 +64,12 @@ export class WyScrollComponent implements OnInit, AfterViewInit, OnChanges {
     // console.log('args :) ', args);
     this.bs.scrollToElement.apply(this.bs, args);
   }
+
+  // 改变歌词位置
+  scrollTo(...args) {
+    this.bs.scrollToElement.apply(this.bs, args);
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     const target = 'data';
     if (changes[target]) {

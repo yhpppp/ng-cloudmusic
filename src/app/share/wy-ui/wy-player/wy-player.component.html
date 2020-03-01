@@ -51,7 +51,7 @@
         </div>
       </div>
       <app-wy-player-panel [songlist]="songList" [currentSong]="currentSong" [show]="isShowListBanel"
-        (opChangeSong)="onChangeSong($event)" (opClose)="isShowListBanel = false">
+        (opChangeSong)="onChangeSong($event)" (opClose)="isShowListBanel = false" [playing]="playing">
       </app-wy-player-panel>
     </div>
   </div>

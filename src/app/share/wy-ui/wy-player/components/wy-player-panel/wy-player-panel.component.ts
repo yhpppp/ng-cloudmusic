@@ -26,12 +26,15 @@ export class WyPlayerPanelComponent implements OnChanges, OnInit {
   @Input() currentSong: Song;
   currentIndex: number;
   @Input() show: boolean;
+  @Input() playing: boolean;
   @Output() opChangeSong = new EventEmitter<Song>();
   @Output() opClose = new EventEmitter();
-
   scrollY = 0;
   // 歌词
   currentLyric: BaseLyricLine[];
+
+  private lyric: WyLyric;
+  currentLineNum: number;
 
   @ViewChildren(WyScrollComponent) private wyScroll: QueryList<
     WyScrollComponent
@@ -61,13 +64,27 @@ export class WyPlayerPanelComponent implements OnChanges, OnInit {
       }
     }
   }
+
+  //
+  handleLyric() {
+    this.lyric.handler.subscribe(({ lineNum }) => {
+      console.log('lineNum :) ', lineNum);
+      this.currentLineNum = lineNum;
+    });
+  }
   // 更新歌词信息
   private updateLyric() {
     this.songService.getLyric(this.currentSong.id).subscribe(res => {
       console.log('res :) ', res);
-      const lyric = new WyLyric(res);
+      this.lyric = new WyLyric(res);
 
-      this.currentLyric = lyric.lines;
+      this.currentLyric = this.lyric.lines;
+      // 歌词返回顶部
+      this.wyScroll.last.scrollTo(0, 0);
+      this.handleLyric();
+      if (this.playing) {
+        this.lyric.play();
+      }
     });
   }
 
@@ -76,8 +93,9 @@ export class WyPlayerPanelComponent implements OnChanges, OnInit {
     const show = 'show';
     const currentSong = 'currentSong';
     const songlist = 'songlist';
-    // 监听 show 的改变
+    const playing = 'playing';
 
+    // 监听 show 的改变
     if (changes[show]) {
       // console.log('currentIndex :) ', this.currentIndex);
 
@@ -98,7 +116,7 @@ export class WyPlayerPanelComponent implements OnChanges, OnInit {
       this.currentIndex = 0;
     }
 
-    // // 监听当前歌曲的改变
+    // 监听当前歌曲的改变
     if (changes[currentSong]) {
       // console.log('currentSong :) ', this.currentSong);
 
@@ -113,6 +131,13 @@ export class WyPlayerPanelComponent implements OnChanges, OnInit {
             this.scrollToCurrent();
           }
         }
+      }
+    }
+
+    // 监听播放状态暂停或滚动歌词
+    if (changes[playing]) {
+      if (!changes[playing].firstChange) {
+        this.lyric && this.lyric.togglePlay(this.playing);
       }
     }
   }
