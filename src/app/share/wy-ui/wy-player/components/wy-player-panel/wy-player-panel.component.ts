@@ -35,6 +35,7 @@ export class WyPlayerPanelComponent implements OnChanges, OnInit {
 
   private lyric: WyLyric;
   currentLineNum: number;
+  private lyricRefs: NodeList;
 
   @ViewChildren(WyScrollComponent) private wyScroll: QueryList<
     WyScrollComponent
@@ -66,26 +67,60 @@ export class WyPlayerPanelComponent implements OnChanges, OnInit {
   }
 
   //
-  handleLyric() {
+  handleLyric(startLine = 2) {
     this.lyric.handler.subscribe(({ lineNum }) => {
       console.log('lineNum :) ', lineNum);
-      this.currentLineNum = lineNum;
+      if (!this.lyricRefs) {
+        this.lyricRefs = this.wyScroll.last.el.nativeElement.querySelectorAll(
+          'ul li'
+        );
+        // console.log('this.lyricRefs :) ', this.lyricRefs);
+      }
+
+      if (this.lyricRefs.length) {
+        this.currentLineNum = lineNum;
+        // console.log('startLine :) ', startLine);
+
+        if (lineNum > startLine) {
+          const targetLine = this.lyricRefs[lineNum - startLine];
+          if (targetLine) {
+            this.wyScroll.last.scrollToElement(targetLine, 300, false, false);
+          }
+        }
+      } else {
+        this.wyScroll.last.scrollTo(0, 0);
+      }
     });
   }
   // 更新歌词信息
   private updateLyric() {
+    this.resetLyric();
     this.songService.getLyric(this.currentSong.id).subscribe(res => {
-      console.log('res :) ', res);
+      // console.log('res :) ', res);
       this.lyric = new WyLyric(res);
 
       this.currentLyric = this.lyric.lines;
       // 歌词返回顶部
       this.wyScroll.last.scrollTo(0, 0);
-      this.handleLyric();
+
+      const startLine = res.tlyric ? 1 : 2;
+      // console.log('startLine :) ', startLine);
+
+      this.handleLyric(startLine);
       if (this.playing) {
         this.lyric.play();
       }
     });
+  }
+
+  private resetLyric() {
+    if (this.lyric) {
+      this.lyric.stop();
+      this.lyric = null;
+      this.currentLyric = [];
+      this.currentLineNum = 0;
+      this.lyricRefs = null;
+    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -130,14 +165,16 @@ export class WyPlayerPanelComponent implements OnChanges, OnInit {
             // 切歌时滚动位置更新
             this.scrollToCurrent();
           }
+        } else {
+          this.resetLyric();
         }
       }
     }
 
     // 监听播放状态暂停或滚动歌词
     if (changes[playing]) {
-      if (!changes[playing].firstChange) {
-        this.lyric && this.lyric.togglePlay(this.playing);
+      if (!changes[playing].firstChange && this.lyric !== undefined) {
+        this.lyric.togglePlay(this.playing);
       }
     }
   }

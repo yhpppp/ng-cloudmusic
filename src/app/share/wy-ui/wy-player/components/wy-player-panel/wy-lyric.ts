@@ -154,7 +154,7 @@ export class WyLyric {
     }, delay);
   }
 
-  private stop() {
+  stop() {
     if (this.playing) {
       this.playing = false;
     }
