@@ -26,6 +26,7 @@ import {
 import { DOCUMENT } from '@angular/common';
 import { Subscription, fromEvent } from 'rxjs';
 import { shuffle, findIndex } from '../../../utils/array';
+import { WyPlayerPanelComponent } from './components/wy-player-panel/wy-player-panel.component';
 
 // 歌曲模式列表哦
 const modeList: PlayMode[] = [
@@ -50,6 +51,8 @@ const modeList: PlayMode[] = [
 })
 export class WyPlayerComponent implements OnInit {
   @ViewChild('audio', { static: true }) private audio: ElementRef;
+  @ViewChild(WyPlayerPanelComponent, { static: true })
+  private playerPanel: WyPlayerPanelComponent;
   private audioEl: HTMLAudioElement;
   // 进度条百分比
   sliderValue = 0;
@@ -196,6 +199,11 @@ export class WyPlayerComponent implements OnInit {
   private singleLoop() {
     this.updateCurrentTime(0);
     this.play();
+    if (this.playerPanel) {
+      console.log('111 :) ', 111);
+
+      this.playerPanel.seekLyric(0);
+    }
   }
   private updateIndex(index: number) {
     this.store$.dispatch(SetCurrentIndex({ currentIndex: index }));
@@ -289,14 +297,16 @@ export class WyPlayerComponent implements OnInit {
     // const buffered = this.audioEl.buffered;
     // if (buffered.length && this.bufferPercent < 100) {
   }
-  // 更新进度
+  // 更新进度条
   onSliderChange(emit: number) {
     if (!this.currentSong) {
       return;
     }
     const time = this.duration * (emit / 100);
-
     this.updateCurrentTime(time);
+    if (this.playerPanel) {
+      this.playerPanel.seekLyric(time * 1000);
+    }
   }
 
   // 改变音量大小

@@ -134,11 +134,13 @@ export class WyLyric {
 
   //
   callHandler(index: number) {
-    this.handler.next({
-      txt: this.lines[index].txt,
-      txtCn: this.lines[index].txtCn,
-      lineNum: index
-    });
+    if (index > 0) {
+      this.handler.next({
+        txt: this.lines[index].txt,
+        txtCn: this.lines[index].txtCn,
+        lineNum: index
+      });
+    }
   }
   //
   private playReset() {
@@ -162,7 +164,7 @@ export class WyLyric {
   }
 
   // 播放歌词
-  play(startTime = 0) {
+  play(startTime = 0, skip = false) {
     if (!this.lines.length) {
       return;
     }
@@ -171,10 +173,12 @@ export class WyLyric {
     }
 
     this.curNum = this.findCurNum(startTime);
-    console.log('this.curNum :) ', this.curNum);
+    // console.log('this.curNum :) ', this.curNum);
     this.startStamp = Date.now() - startTime;
-    console.log('this.startStamp :) ', this.startStamp);
-
+    // console.log('this.startStamp :) ', this.startStamp);
+    if (!skip) {
+      this.callHandler(this.curNum - 1);
+    }
     // 不是最后结尾时继续更新歌词位置
     if (this.curNum < this.lines.length) {
       clearTimeout(this.timer);
@@ -188,10 +192,15 @@ export class WyLyric {
     this.playing = playing;
     if (playing) {
       const startTime = (this.pauseStamp || now) - (this.startStamp || now);
-      this.play(startTime);
+      this.play(startTime, true);
     } else {
       this.stop();
       this.pauseStamp = now;
     }
+  }
+
+  // 滚动进度条时更新歌词位置
+  seek(time: number) {
+    this.play(time);
   }
 }

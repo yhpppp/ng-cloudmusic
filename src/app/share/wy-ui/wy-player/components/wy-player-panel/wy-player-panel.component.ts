@@ -123,6 +123,12 @@ export class WyPlayerPanelComponent implements OnChanges, OnInit {
     }
   }
 
+  seekLyric(time: number) {
+    if (this.lyric) {
+      this.lyric.seek(time);
+    }
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     // console.log('changes :) ', changes);
     const show = 'show';
