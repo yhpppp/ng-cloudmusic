@@ -170,7 +170,7 @@ export class WyLyric {
   }
 
   // 播放歌词
-  play(startTime = 0, skip = false) {
+  play(startTime = 0, skipTime = false) {
     if (!this.lines.length) {
       return;
     }
@@ -182,7 +182,7 @@ export class WyLyric {
     // console.log('this.curNum :) ', this.curNum);
     this.startStamp = Date.now() - startTime;
     // console.log('this.startStamp :) ', this.startStamp);
-    if (!skip) {
+    if (!skipTime) {
       this.callHandler(this.curNum - 1);
     }
     // 不是最后结尾时继续更新歌词位置
