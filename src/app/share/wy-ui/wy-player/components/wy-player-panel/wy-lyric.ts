@@ -1,5 +1,5 @@
 import { Lyric } from '../../../../../services/data-types/common.types';
-import { Observable, zip, from, Subject } from 'rxjs';
+import { Observable, zip, from, Subject, timer, Subscription } from 'rxjs';
 import { skip } from 'rxjs/internal/operators';
 // [00:34.940]
 // 歌词时间正则
@@ -24,7 +24,7 @@ export class WyLyric {
   private playing = false;
   private curNum: number;
   private startStamp: number;
-  private timer: any;
+  private timer$: Subscription;
   // 暂停时的时间
   private pauseStamp: number;
   handler = new Subject<Handler>();
@@ -148,19 +148,25 @@ export class WyLyric {
     const line = this.lines[this.curNum];
     const delay = line.time - (Date.now() - this.startStamp);
     console.log('delay :) ', delay);
-    this.timer = setTimeout(() => {
+    this.timer$ = timer(delay).subscribe(() => {
       this.callHandler(this.curNum++);
       if (this.curNum < this.lines.length && this.playing) {
         this.playReset();
       }
-    }, delay);
+    });
+  }
+
+  private clearTimer() {
+    if (this.timer$) {
+      this.timer$.unsubscribe();
+    }
   }
 
   stop() {
     if (this.playing) {
       this.playing = false;
     }
-    clearTimeout(this.timer);
+    this.clearTimer();
   }
 
   // 播放歌词
@@ -181,7 +187,7 @@ export class WyLyric {
     }
     // 不是最后结尾时继续更新歌词位置
     if (this.curNum < this.lines.length) {
-      clearTimeout(this.timer);
+      this.clearTimer();
       this.playReset();
     }
   }

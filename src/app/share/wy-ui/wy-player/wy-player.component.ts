@@ -200,8 +200,6 @@ export class WyPlayerComponent implements OnInit {
     this.updateCurrentTime(0);
     this.play();
     if (this.playerPanel) {
-      console.log('111 :) ', 111);
-
       this.playerPanel.seekLyric(0);
     }
   }
